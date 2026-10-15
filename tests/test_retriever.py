@@ -85,3 +85,81 @@ def test_small_batch_embed_and_store():
     # Clean up test collection
     client.delete_collection(test_collection)
     print(f"\nSmall batch test: {stored} chunks embedded and stored")
+
+# ── Milestone 3 — RAG Retrieval Tests ──────────────────────
+
+from rag.retriever import retrieve, format_context, get_retriever
+
+@pytest.fixture(scope="module")
+def retriever():
+    """Shared retriever for all tests."""
+    model, client = get_retriever()
+    return model, client
+
+
+def test_retriever_initializes(retriever):
+    """Test retriever loads model and connects to Qdrant."""
+    model, client = retriever
+    assert model is not None
+    assert client is not None
+    print("\nRetriever initialized successfully")
+
+
+def test_retrieve_returns_results(retriever):
+    """Test that a query returns results."""
+    model, client = retriever
+    results = retrieve("Software Defined Networking", model, client, top_k=5)
+    assert isinstance(results, list)
+    assert len(results) > 0
+    assert len(results) <= 5
+    print(f"\nRetrieved {len(results)} results")
+
+
+def test_results_have_required_fields(retriever):
+    """Test that every result has text, source, page, score."""
+    model, client = retriever
+    results = retrieve("OpenFlow protocol", model, client, top_k=3)
+    for result in results:
+        assert "text" in result
+        assert "source" in result
+        assert "page" in result
+        assert "score" in result
+        assert len(result["text"]) > 0
+        assert result["score"] > 0
+    print("\nAll result fields verified")
+
+
+def test_scores_are_sorted(retriever):
+    """Test that results are in descending score order."""
+    model, client = retriever
+    results = retrieve("SDN control plane", model, client, top_k=5)
+    scores = [r["score"] for r in results]
+    assert scores == sorted(scores, reverse=True)
+    print(f"\nScores in order: {scores}")
+
+
+def test_relevant_content_retrieved(retriever):
+    """Test that SDN query returns SDN-relevant content."""
+    model, client = retriever
+    results = retrieve(
+        "Software Defined Networking OpenFlow controller",
+        model, client, top_k=5
+    )
+    combined_text = " ".join([r["text"].lower() for r in results])
+    assert any(
+        keyword in combined_text
+        for keyword in ["sdn", "openflow", "controller",
+                        "software defined", "network"]
+    )
+    print("\nRelevant SDN content confirmed in results")
+
+
+def test_format_context(retriever):
+    """Test that format_context produces a valid string."""
+    model, client = retriever
+    chunks = retrieve("SDN architecture", model, client, top_k=3)
+    context = format_context(chunks)
+    assert isinstance(context, str)
+    assert len(context) > 0
+    assert "[Source 1:" in context
+    print(f"\nFormatted context length: {len(context)} characters")
