@@ -7,6 +7,7 @@ from agents.creator import run_creator_agent, CourseStructure
 from agents.reviewer import run_reviewer_agent, ReviewResult
 from rag.retriever import get_retriever, retrieve, format_context
 from config.settings import MAX_REVISION_LOOPS, QDRANT_COLLECTION
+from agents.alignment import run_alignment_agent
 
 
 # ── State Definition ──────────────────────────────────────
@@ -19,6 +20,7 @@ class WorkflowState:
         self.context = ""
         self.course = None
         self.review = None
+        self.alignment = None
         self.revision_count = 0
         self.feedback = None
         self.status = "initialized"
@@ -79,6 +81,20 @@ def node_reviewer(state: WorkflowState) -> WorkflowState:
     logger.info(
         f"Reviewer: {len(state.review.passed_clos)} passed, "
         f"{len(state.review.failed_clos)} failed"
+    )
+    return state
+
+def node_alignment(state: WorkflowState) -> WorkflowState:
+    """Node 4 — Alignment Agent builds CO-PO matrix."""
+    logger.info("NODE: alignment")
+
+    state.alignment = run_alignment_agent(state.course.clos)
+    state.status = "aligned"
+
+    logger.info(
+        f"CO-PO matrix built: "
+        f"{len(state.alignment.clos)} CLOs × "
+        f"{len(state.alignment.po_keys)} POs"
     )
     return state
 
@@ -153,7 +169,10 @@ def run_workflow(subject: str,
         if not should_revise(state):
             break
 
-    state.status = "approved"
+        # Node 4 — Alignment Agent
+    state = node_alignment(state)
+
+    state.status = "complete"
     logger.info(
         f"Workflow complete. "
         f"Revisions: {state.revision_count}. "
@@ -172,23 +191,27 @@ if __name__ == "__main__":
     )
 
     print("\n" + "="*60)
-    print("WORKFLOW COMPLETE")
+    print("COMPLETE COURSE PACKAGE")
     print("="*60)
 
-    print(f"\nStatus: {state.status}")
-    print(f"Total revisions: {state.revision_count}")
+    print(f"\nStatus       : {state.status}")
+    print(f"Revisions    : {state.revision_count}")
 
-    print("\nFINAL MODULES:")
+    print("\nSYLLABUS — MODULES:")
     for i, m in enumerate(state.course.modules, 1):
         print(f"  {i}. {m}")
-
-    print("\nAPPROVED CLOs:")
-    for i, clo in enumerate(state.course.clos, 1):
-        print(f"  CLO{i}: {clo}")
 
     print("\nPREREQUISITES:")
     for p in state.course.prerequisites:
         print(f"  - {p}")
+
+    print("\nAPPROVED CLOs:")
+    for i, clo in enumerate(state.course.clos, 1):
+        level = state.alignment.blooms_levels[i-1]
+        print(f"  CLO{i} [{level}]: {clo}")
+
+    print("\nCO-PO ATTAINMENT MATRIX:")
+    print(state.alignment.formatted_table)
 
     print("\nHALLUCINATION LOG:")
     for entry in state.hallucination_log:
