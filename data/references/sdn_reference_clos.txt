@@ -1,0 +1,9 @@
+# SDN Expert Reference CLOs
+Explain the fundamental concepts and architecture of Software Defined Networking
+Design and implement SDN network topologies using OpenFlow protocol
+Implement SDN controllers and configure network devices programmatically
+Analyze and evaluate the performance characteristics of SDN-based networks
+Evaluate security vulnerabilities and design secure SDN deployments
+Compare traditional networking with SDN approaches and justify architectural choices
+Apply SDN principles to solve complex network management problems
+Describe the role of SDN controllers in managing network infrastructure

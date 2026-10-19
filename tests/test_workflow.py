@@ -95,7 +95,7 @@ def test_full_workflow_runs():
         num_modules=5
     )
 
-    assert state.status == "approved"
+    assert state.status == "complete"
     assert state.course is not None
     assert len(state.course.modules) == 5
     assert len(state.course.clos) >= 1
