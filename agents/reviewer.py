@@ -110,6 +110,20 @@ def review_clo(clo: str) -> CLOReview:
     """
     first_verb = get_first_verb(clo)
     blooms_level = check_blooms_level(first_verb)
+    word_count = len(clo.strip().split())
+
+    if word_count < 3:
+        return CLOReview(
+            clo=clo,
+            passed=False,
+            blooms_level=blooms_level if blooms_level != "unknown_verb" else None,
+            first_verb=first_verb,
+            feedback=(
+                "FAIL — the CLO is incomplete. It must be a specific, "
+                "assessable statement of at least 3 words describing what "
+                "the student will be able to do."
+            )
+        )
 
     if blooms_level and blooms_level != "unknown_verb":
         return CLOReview(

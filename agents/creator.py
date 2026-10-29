@@ -33,13 +33,17 @@ CONTEXT:
 
 Return ONLY a JSON object with exactly these fields:
 - "modules": list of {num_modules} module name strings
-- "clos": list of 5 CLOs each starting with a Bloom's verb
+- "clos": list of exactly 5 complete Course Learning Outcome statements
 - "prerequisites": list of 2-3 prerequisite subjects
 
 Rules:
-1. CLOs must start with: Explain, Design, Implement, Analyze, Evaluate, or Create
-2. Base content on the context above only
-3. Return ONLY JSON, no extra text
+1. Each CLO must start with one of these Bloom's verbs: Explain, Design, Implement, Analyze, Evaluate, or Create.
+2. Each CLO must be a complete, specific, assessable sentence of at least 8 words.
+3. Each CLO must describe what a student will be able to do with the subject content.
+4. Do not return a CLO containing only a verb, a verb plus one word, or a label such as "CLO1".
+5. Example of the required style: "Analyze the architecture and operation of computer networks using appropriate protocols."
+6. Base content on the context above only.
+7. Return ONLY JSON, no extra text.
 
 JSON:"""
 

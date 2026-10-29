@@ -80,6 +80,14 @@ def test_review_clo_fail():
     print(f"\nAll {len(bad_clos)} bad CLOs correctly failed")
 
 
+def test_review_clo_rejects_incomplete_statement():
+    """Test that a Bloom verb alone is not accepted as a CLO."""
+    review = review_clo("Explain")
+    assert review.passed is False
+    assert "incomplete" in review.feedback.lower()
+    print("\nIncomplete CLO correctly rejected")
+
+
 def test_reviewer_agent_all_pass():
     """Test reviewer with all valid CLOs."""
     clos = [
